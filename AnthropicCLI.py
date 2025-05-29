@@ -181,7 +181,6 @@ class AnthropicCLI:
 
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None, max_tokens: int = 1024):
         """Initialize the Anthropic client.
-
         Args:
             api_key: Anthropic API key (falls back to ANTHROPIC_API_KEY env var)
             model: Model to use for completions (defaults to claude-3-sonnet-20240229)
