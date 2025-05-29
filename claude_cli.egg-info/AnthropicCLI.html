@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Report: AI-Assisted Code Generation CLI Framework</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices:
+        - Report Section -> Goal -> Viz/Presentation Method -> Interaction -> Justification -> Library/Method
+        - Executive Summary/Introduction -> Inform -> Expandable Text Sections -> Click to Expand/Collapse -> Easy focused reading -> HTML/JS
+        - Table 1 (Workflow Phases) -> Organize/Inform -> Horizontal Bar Chart -> Hover for details on phase & LLM role, Click to jump to detailed text -> Clearer understanding of sequence and roles -> Chart.js
+        - Table 2 (Prompt Eng.) -> Inform/Organize -> Interactive Cards/List -> Click to reveal details of each best practice -> Active learning of practices -> HTML/JS
+        - Table 4 (Markdown Parsers) -> Compare -> Interactive Table/Cards -> Click to highlight/expand details of a library -> Easy comparison -> HTML/JS
+        - Defensive Coding (TDD, Linting, Hooks) -> Inform/Explain -> Tabbed content within section or interactive toggles -> Click to switch concept view -> Focused learning on each practice -> HTML/JS
+        - User Validation (Diffs) -> Illustrate -> Simulated Diff View (Static HTML/CSS) -> Static but clearly formatted to show changes -> Understand the concept visually -> HTML/CSS
+        - Git Automation -> Explain Process -> Step-by-step interactive flow (cards) -> Click 'next' to see command/explanation -> Understand Git sequence for automation -> HTML/JS
+        - Conclusions/Recommendations -> Inform -> Bullet points/Expandable text -> Click for detail -> Summarize key learnings effectively -> HTML/JS
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-bottom-width: 4px;
+            color: #0D9488; /* teal-600 */
+            border-color: #0D9488; /* teal-600 */
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 500px;
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .chart-container {
+                height: 450px;
+            }
+        }
+        @media (max-width: 640px) { /* sm breakpoint */
+            .chart-container {
+                height: 500px;
+                max-height: 600px;
+            }
+        }
+        .diff-view {
+            font-family: monospace;
+            white-space: pre;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f9fafb; /* gray-50 */
+            overflow-x: auto;
+        }
+        .diff-add {
+            color: #10b981; /* green-500 */
+            background-color: #e6f7f1; /* light green */
+        }
+        .diff-remove {
+            color: #ef4444; /* red-500 */
+            background-color: #feebeb; /* light red */
+        }
+        .interactive-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .interactive-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* For custom scrollbars if needed */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0D9488; /* teal-600 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0F766E; /* teal-700 */
+        }
+    </style>
+</head>
+<body class="bg-stone-100 text-neutral-800 antialiased">
+
+<header class="bg-teal-700 text-white shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Interactive Report: AI-Assisted Code Generation CLI Framework</h1>
+        <p class="text-sm text-teal-100 mt-1">Explore the key principles and design of a structured approach to AI code generation.</p>
+    </div>
+</header>
+
+<nav class="bg-white shadow-md sticky top-[80px] sm:top-[88px] z-40">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-wrap -mb-px" id="tabsContainer">
+            <button data-tab="overview" class="tab-button active text-sm sm:text-base font-medium text-center text-neutral-500 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 px-3 py-3 sm:px-4 sm:py-4">Overview</button>
+            <button data-tab="corePrinciples" class="tab-button text-sm sm:text-base font-medium text-center text-neutral-500 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 px-3 py-3 sm:px-4 sm:py-4">Core Principles</button>
+            <button data-tab="cliDesign" class="tab-button text-sm sm:text-base font-medium text-center text-neutral-500 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 px-3 py-3 sm:px-4 sm:py-4">CLI Design</button>
+            <button data-tab="workflowInAction" class="tab-button text-sm sm:text-base font-medium text-center text-neutral-500 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 px-3 py-3 sm:px-4 sm:py-4">Workflow in Action</button>
+            <button data-tab="keyTakeaways" class="tab-button text-sm sm:text-base font-medium text-center text-neutral-500 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 px-3 py-3 sm:px-4 sm:py-4">Key Takeaways</button>
+        </div>
+    </div>
+</nav>
+
+<main class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <section id="overview" class="content-section active">
+        <h2 class="text-2xl font-semibold text-teal-700 mb-4">Overview of the Framework</h2>
+        <p class="mb-6 text-neutral-700 leading-relaxed">This section provides a high-level summary of the AI-assisted code generation CLI framework, outlining its purpose, benefits, and the problems it aims to solve. It introduces the concept of using structured methodologies to guide Large Language Models (LLMs) for more reliable and efficient code generation.</p>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <details class="group">
+                <summary class="text-xl font-medium text-neutral-700 cursor-pointer group-hover:text-teal-600 flex justify-between items-center">
+                    Executive Summary
+                    <span class="text-teal-500 group-open:rotate-90 transform transition-transform duration-200">&#10148;</span>
+                </summary>
+                <p class="mt-3 text-neutral-600 leading-relaxed">The CLI framework detailed in the source report aims to streamline AI-assisted code generation by addressing LLM limitations like hallucination and scope drift. It employs `prompt_plan.md` and `phase.md` files for structured, phased LLM interaction, incorporates user validation via diffs, automates Git commits, and enforces coding standards. This transforms LLMs into reliable components within a modern software development pipeline.</p>
+            </details>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <details class="group">
+                <summary class="text-xl font-medium text-neutral-700 cursor-pointer group-hover:text-teal-600 flex justify-between items-center">
+                    Introduction: The Evolving Landscape
+                    <span class="text-teal-500 group-open:rotate-90 transform transition-transform duration-200">&#10148;</span>
+                </summary>
+                <div class="mt-3 text-neutral-600 leading-relaxed space-y-3">
+                    <p><strong class="text-neutral-700">Promise of LLMs:</strong> LLMs are reshaping software development by automating tasks like code generation, debugging, and refactoring. Specialized models (e.g., CodeGen) further enhance these capabilities, suggesting a future of granular, efficient AI assistance. This necessitates modular CLI frameworks with abstract LLM interfaces for adaptability.</p>
+                    <p><strong class="text-neutral-700">Addressing LLM Limitations:</strong> LLMs struggle with complex intent, compositional reasoning, and context, leading to errors. Structured approaches (multi-agent systems, hierarchical decomposition) break tasks into manageable units, improving context management and coherence. The `prompt_plan.md` and `phase.md` files act as an external "cognitive architecture" to guide the LLM, making it a controllable component in the development pipeline and enabling systematic improvements.</p>
+                </div>
+            </details>
+        </div>
+    </section>
+
+    <section id="corePrinciples" class="content-section">
+        <h2 class="text-2xl font-semibold text-teal-700 mb-4">Core Principles of Structured AI Code Generation</h2>
+        <p class="mb-6 text-neutral-700 leading-relaxed">This section delves into the foundational principles that underpin the CLI framework. Understanding these principles is key to appreciating how structured workflows, clear guidance, and defensive practices contribute to more effective and reliable AI-assisted development. Explore how phased development, planning documents, and robust quality checks transform LLMs into valuable coding partners.</p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow-lg interactive-card">
+                <h3 class="text-xl font-medium text-neutral-700 mb-3">Phased Development: Plan, Generate, Validate</h3>
+                <p class="text-neutral-600 leading-relaxed mb-3">Effective LLM code generation mimics human development: meticulous planning before implementation. This involves a planning phase (LLM outlines steps) and an implementation phase (LLM generates code based on the plan). Common workflows include brainstorming, README-driven development, LLM-assisted planning, prompt generation, and finally, LLM editing/debugging/committing. This structured, phased approach ensures systematic problem-solving.</p>
+                <p class="text-neutral-600 leading-relaxed"><strong class="text-neutral-700">Key Insight:</strong> Treating LLMs as intelligent assistants guided through a human-like problem-solving process is more effective than expecting complete solutions in one go. The `phase.md` formalizes this "cognitive architecture," reducing scope drift.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg interactive-card">
+                <h3 class="text-xl font-medium text-neutral-700 mb-3">Role of `prompt_plan.md` and `phase.md`</h3>
+                <p class="text-neutral-600 leading-relaxed mb-3">These Markdown files are central to guiding LLMs. `prompt_plan.md` (a dynamic checklist of tasks) directs the AI to implement functionality, run tests, commit changes, and mark tasks as complete, with user review points. This is similar to README-driven development (RDD). LLMs can even generate these prompts.</p>
+                <p class="text-neutral-600 leading-relaxed"><strong class="text-neutral-700">Key Insight:</strong> These files enable a structured, auditable, and repeatable process. They act as both input and state-tracker, vital for the non-deterministic nature of LLMs, transforming isolated queries into a continuous, managed workflow for complex projects.</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
+            <h3 class="text-xl font-medium text-neutral-700 mb-4">Defensive Coding Practices for LLM Outputs</h3>
+            <p class="text-neutral-600 leading-relaxed mb-4">Essential safeguards against LLM issues like hallucination and scope drift. Click on each practice to learn more.</p>
+            <div class="space-y-4" id="defensiveCodingPractices">
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
+            <h3 class="text-xl font-medium text-neutral-700 mb-3" id="workflowPhasesTitle">Interactive: Key LLM Code Generation Workflow Phases</h3>
+            <p class="text-neutral-600 leading-relaxed mb-4">The following chart visualizes the key phases in a structured LLM code generation workflow. Hover over each bar to see details about the phase description and the LLM's role. This illustrates the systematic progression from input to Git automation, orchestrated by the CLI.</p>
+            <div class="chart-container">
+                <canvas id="workflowPhasesChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <section id="cliDesign" class="content-section">
+        <h2 class="text-2xl font-semibold text-teal-700 mb-4">Designing the Python CLI for AI Orchestration</h2>
+        <p class="mb-6 text-neutral-700 leading-relaxed">This section explores the technical design aspects of the Python CLI. It covers the choice of CLI framework, methods for parsing instructions from Markdown files, and strategies for orchestrating interactions with the LLM, including prompt engineering and context management. These elements are crucial for building an effective and user-friendly tool.</p>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6 interactive-card">
+            <h3 class="text-xl font-medium text-neutral-700 mb-3">CLI Framework Selection (Click)</h3>
+            <p class="text-neutral-600 leading-relaxed">The `Click` library is recommended for its intuitive design and features for handling arguments and interactive input (e.g., `click.prompt()`, `click.confirm()`). `click.confirm(abort=True)` is valuable for critical operations.</p>
+            <p class="text-neutral-600 leading-relaxed"><strong class="text-neutral-700">Key Insight:</strong> Click prioritizes user experience and robust control, crucial for validating AI actions. It elevates the CLI to a trusted orchestrator, enhancing safety and usability.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h3 class="text-xl font-medium text-neutral-700 mb-3">Parsing Markdown for AI Instructions</h3>
+            <p class="text-neutral-600 leading-relaxed mb-2">Markdown is ideal for LLM content due to its clarity and structure, improving parsing and preserving semantics. Libraries like `markdown-analysis` or `python-markdown` can extract elements like headers, sections, and code blocks.</p>
+            <p class="text-neutral-600 leading-relaxed mb-4"><strong class="text-neutral-700">Key Insight:</strong> Markdown files (`prompt_plan.md`, `phase.md`) serve as a human-readable and LLM-friendly interface. Parsing libraries enable the CLI to interpret instructions and extract generated code, turning static files into dynamic specifications.</p>
+            <div id="markdownParsersComparison" class="mt-4">
+                <h4 class="text-lg font-medium text-neutral-700 mb-3">Comparison of Python Markdown Parsing Libraries (Table 4 from report)</h4>
+                <p class="text-neutral-600 leading-relaxed mb-4">Explore the features of `markdown-analysis` and `python-markdown` for parsing AI instructions. The report suggests `markdown-analysis` as more suitable for this CLI due to its specialized extraction features.</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-medium text-neutral-700 mb-3">Orchestrating LLM Interactions</h3>
+            <p class="text-neutral-600 leading-relaxed mb-4">Effective LLM interaction requires careful orchestration of inputs and context. This involves sophisticated prompt engineering and context management strategies.</p>
+
+            <div class="mb-6">
+                <h4 class="text-lg font-medium text-neutral-700 mb-3">Prompt Engineering Best Practices (Table 2 from report)</h4>
+                <p class="text-neutral-600 leading-relaxed mb-4">Crafting effective prompts is key. Explore these best practices by clicking on each card. Remember, concise prompts (under 50 words) often yield better results.</p>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="promptEngineeringPractices">
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-lg font-medium text-neutral-700 mb-3">Managing Context and Multi-Turn Conversations</h4>
+                <p class="text-neutral-600 leading-relaxed mb-2">Advanced chatbots handle multi-turn conversations and process code from multiple files, "memorizing" files for context. Providing relevant context (READMEs, existing code) is crucial. Hierarchical problem decomposition improves context window management. A "fresh chat" can reset focus if interactions deviate.</p>
+                <p class="text-neutral-600 leading-relaxed"><strong class="text-neutral-700">Key Insight:</strong> Dynamic context curation is paramount. The CLI needs sophisticated context management to construct prompts with relevant file contents, history, and task status, acting as the LLM's external memory and intelligent curator.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="workflowInAction" class="content-section">
+        <h2 class="text-2xl font-semibold text-teal-700 mb-4">Workflow in Action: Validation, Git, and Standards</h2>
+        <p class="mb-6 text-neutral-700 leading-relaxed">This section demonstrates key operational aspects of the CLI framework. See how user validation is implemented, how Git operations are automated for version control, and how coding standards are maintained. These practical steps showcase the framework's ability to integrate AI into a controlled and quality-focused development process.</p>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h3 class="text-xl font-medium text-neutral-700 mb-3">User Validation and Feedback Loops</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="interactive-card border border-transparent hover:border-teal-200 p-4 rounded-md">
+                    <h4 class="text-lg font-medium text-neutral-700 mb-2">Presenting Code Changes (Unified Diffs)</h4>
+                    <p class="text-neutral-600 leading-relaxed mb-3">Git's `diff` command shows changes in a standardized, human-readable format. Python's `difflib.unified_diff` can generate these programmatically. Presenting AI changes as diffs leverages familiar review workflows, builds trust, and allows focused review, reducing cognitive load.</p>
+                    <p class="text-neutral-600 leading-relaxed mb-3"><strong class="text-neutral-700">Simulated Diff Example:</strong></p>
+                    <div class="diff-view">
+                        <span class="text-gray-500">--- a/example.py</span>
+                        <span class="text-gray-500">+++ b/example.py</span>
+                        <span class="text-blue-500">@@ -1,3 +1,4 @@</span>
+                        <span class="diff-remove">-def hello_world():</span>
+                        <span class="diff-remove">-    print("Hello")</span>
+                        <span class="diff-add">+def greet(name):</span>
+                        <span class="diff-add">+    print(f"Hello, {name}!")</span>
+                        <span> print("World")</span>
+                    </div>
+                </div>
+                <div class="interactive-card border border-transparent hover:border-teal-200 p-4 rounded-md">
+                    <h4 class="text-lg font-medium text-neutral-700 mb-2">Interactive User Confirmation</h4>
+                    <p class="text-neutral-600 leading-relaxed">The `Click` library's `click.confirm()` prompts for yes/no confirmation before irreversible actions like commits. `abort=True` provides a safety net, ensuring human control over AI modifications.</p>
+                    <button class="mt-3 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50" onclick="alert('Simulated Confirmation: You clicked to confirm an action. In the CLI, this would proceed or abort based on your choice.')">
+                        Simulate Confirmation
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h3 class="text-xl font-medium text-neutral-700 mb-3">Automating Git Operations</h3>
+            <p class="text-neutral-600 leading-relaxed mb-4">Seamless Git integration is a cornerstone for version controlling AI-generated code. The CLI automates checking status, staging, committing, and can even handle patches.</p>
+            <div id="gitAutomationSteps" class="space-y-3">
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-medium text-neutral-700 mb-3">Adhering to Coding Standards</h3>
+            <p class="text-neutral-600 leading-relaxed mb-4">Maintaining high code quality is crucial. The framework incorporates automated checks like linting, formatting, and pre-commit hooks.</p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="interactive-card border border-transparent hover:border-teal-200 p-4 rounded-md">
+                    <h4 class="text-lg font-medium text-neutral-700 mb-2">Integration of Linting and Formatting</h4>
+                    <p class="text-neutral-600 leading-relaxed">Essential for bug prevention and readability. Linters (Ruff, Biome) and formatters enforce standards. LLMs can adapt to feedback from these tools ("robots love to run a good linter").</p>
+                </div>
+                <div class="interactive-card border border-transparent hover:border-teal-200 p-4 rounded-md">
+                    <h4 class="text-lg font-medium text-neutral-700 mb-2">Pre-Commit Hooks for Quality Gates</h4>
+                    <p class="text-neutral-600 leading-relaxed">The `pre-commit` Python package allows defining checks (linting, formatting, tests) in `.pre-commit-config.yaml` that run before commits. This catches "wild code changes" from LLMs, preventing faulty code from entering the repo and CI/CD pipelines.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="keyTakeaways" class="content-section">
+        <h2 class="text-2xl font-semibold text-teal-700 mb-4">Conclusions and Recommendations</h2>
+        <p class="mb-6 text-neutral-700 leading-relaxed">This final section summarizes the critical findings and actionable recommendations from the report. By embracing these principles, the Python CLI framework can transform AI-assisted code generation into a reliable, efficient, and auditable development process, significantly augmenting developer productivity while maintaining high standards of code quality.</p>
+
+        <div class="space-y-4">
+            <div class="bg-white p-5 rounded-lg shadow-lg interactive-card">
+                <h3 class="text-lg font-medium text-neutral-700">1. Embrace Phased, Structured Workflows</h3>
+                <p class="mt-1 text-neutral-600 leading-relaxed">LLMs perform optimally when guided. `prompt_plan.md` and `phase.md` are foundational, externalizing the AI's "cognitive architecture." The CLI must enforce these phases.</p>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow-lg interactive-card">
+                <h3 class="text-lg font-medium text-neutral-700">2. Prioritize Human-in-the-Loop Validation</h3>
+                <p class="mt-1 text-neutral-600 leading-relaxed">User validation via unified diffs and interactive confirmations (e.g., with `Click`) is indispensable for trust and control over LLM outputs.</p>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow-lg interactive-card">
+                <h3 class="text-lg font-medium text-neutral-700">3. Implement Robust Defensive Coding Practices</h3>
+                <p class="mt-1 text-neutral-600 leading-relaxed">Automated quality gates (TDD, linting, formatting, pre-commit hooks) are essential safeguards and feedback mechanisms for AI-generated code.</p>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow-lg interactive-card">
+                <h3 class="text-lg font-medium text-neutral-700">4. Optimize LLM Interaction via Prompt Engineering</h3>
+                <p class="mt-1 text-neutral-600 leading-relaxed">`prompt_plan.md` should contain meticulously engineered, concise, context-rich prompts. The CLI orchestrates these sequentially.</p>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow-lg interactive-card">
+                <h3 class="text-lg font-medium text-neutral-700">5. Leverage Markdown as a Unified Interface</h3>
+                <p class="mt-1 text-neutral-600 leading-relaxed">Markdown's dual readability is ideal. Libraries like `markdown-analysis` enable programmatic parsing, turning documentation into executable specifications.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-neutral-800 text-neutral-300 py-8 mt-12">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p>&copy; 2024 Interactive Report SPA. Based on "Automating AI-Assisted Code Generation CLI Framework".</p>
+        <p class="text-sm text-neutral-400 mt-1">Designed for educational and illustrative purposes.</p>
+    </div>
+</footer>
+
+<script>
+    const tabsContainer = document.getElementById('tabsContainer');
+    const contentSections = document.querySelectorAll('.content-section');
+    const workflowPhasesChartCtx = document.getElementById('workflowPhasesChart')?.getContext('2d');
+
+    const workflowData = {
+        labels: ['Input', 'Orchestration', 'Planning', 'Generation', 'Validation', 'Git Automation'],
+        descriptions: [
+            'User defines initial requirements and project context. CLI identifies `prompt_plan.md` and `phase.md`.',
+            'CLI coordinates LLM and external tools. Parses `phase.md`, manages LLM context.',
+            'LLM generates detailed solution steps and sub-prompts. CLI provides `spec.md`, `README.md` as context.',
+            'LLM produces code snippets or modifications. CLI invokes LLM API with engineered prompts.',
+            'Automated checks (tests, linting) and user review of generated code. CLI runs checks, generates diffs.',
+            'Staging, committing, and potentially pushing validated changes. CLI executes Git commands.'
+        ],
+        llmRoles: [
+            'Interprets high-level intent from user input.',
+            'Understands overall task and workflow, dynamically adjusts.',
+            'Outlines concise solution steps; Generates specific coding prompts.',
+            'Produces code based on current prompt; Edits existing files.',
+            'Refines code based on test failures, linting errors, or user feedback.',
+            '(Implicitly) Generates changes ready for commit.'
+        ],
+        reportSections: [ // Dummy sections to jump to, replace with actual IDs if available
+            'overview', 'corePrinciples', 'cliDesign', 'workflowInAction', 'workflowInAction', 'keyTakeaways'
+        ]
+    };
+
+    const defensivePractices = [
+        { name: "Testing (TDD)", description: "Robust Test-Driven Development provides a structured environment, countering hallucination and scope drift. LLM first builds tests/mocks, then functional code. Each segment is immediately validated. 'Robots LOVE TDD'." },
+        { name: "Linting", description: "Crucial for preventing bugs, readability, and consistency. LLMs can incorporate and benefit from linters like Ruff, Biome, Clippy. 'Robots love to run a good linter'." },
+        { name: "Pre-Commit Hooks", description: "Integrates testing, linting, type checking via `pre-commit` package (`.pre-commit-config.yaml`). Prevents 'wild code changes' from LLMs entering the repo and CI/CD pipelines." },
+        { name: "User Validation", description: "Explicit user feedback loops (accuracy info, test cases, correct/incorrect outputs) significantly improve LLM code generation. Can mimic human debugging by feeding local variable info back to LLM." }
+    ];
+
+    const markdownParsers = [
+        { name: "markdown-analysis", features: "Identify headers/sections, Extract fenced code blocks with language, Extract lists, tables, links, HTML blocks, Count elements.", pros: "Specifically designed for analytical extraction. Direct methods for code blocks. Easier to isolate components.", cons: "Less focused on HTML rendering. More manual assembly for full HTML.", suitable: true },
+        { name: "python-markdown", features: "Parse Markdown to ElementTree, Convert Markdown to HTML, Supports extensions, Handles basic block parsing.", pros: "Core library for MD to HTML. Highly extensible. Well-documented.", cons: "Extracting specific elements might require more ElementTree traversal. Less direct API for 'analytical' extraction.", suitable: false }
+    ];
+
+    const promptPractices = [
+        { name: "Be Clear and Specific", description: "Use precise language, define terms, state desired action clearly. Reduces misinterpretation, leads to accurate code.", why: "Ensures LLM understands exact requirements." },
+        { name: "Provide Context", description: "Include relevant background, project details, or existing code. Helps LLM generate accurate, relevant code.", why: "Code must fit the project." },
+        { name: "Break Down Complex Tasks", description: "Divide large tasks into smaller, logical steps (Chain-of-Thought). Prevents 'overloading' prompts.", why: "Improves LLM's reasoning, reduces errors." },
+        { name: "Specify Output Format", description: "Clearly instruct on desired format (JSON, code block). Ensures consistent, parseable responses.", why: "Simplifies extraction and validation." },
+        { name: "Set a Persona", description: "Assign a role (e.g., 'junior Python programmer'). Guides tone, vocabulary, coding style.", why: "Tailors output to context." },
+        { name: "Keep Prompts Concise", description: "Aim for <50 words; avoid excessive length. Shorter prompts yield higher success rates.", why: "Reduces likelihood of errors." },
+        { name: "Use Affirmative Statements", description: "Frame instructions positively (what to include). Guides AI to precise outputs.", why: "Reduces ambiguity." }
+    ];
+
+    const gitAutomationStepsData = [
+        { title: "1. Check Repository Status", command: "git status", explanation: "Provides an overview of working directory and staging area (modified, staged, untracked files). Essential to know what changes exist. `git rev-parse --is-inside-work-tree` confirms if it's a Git repo." },
+        { title: "2. Stage Changes", command: "git add . (or specific files)", explanation: "Moves modified/new files from working directory to staging area, preparing them for commit." },
+        { title: "3. Commit Changes", command: "git commit -m \"Commit message\"", explanation: "Creates a new commit with staged changes and a descriptive message. Must check for staged changes first to avoid errors (`git diff --cached`)." },
+        { title: "4. Dry-Run Capabilities (Optional but Recommended)", command: "e.g., git clean -n, git push --dry-run", explanation: "Simulates commands without actual changes, allowing preview of impact. `git add/pull` don't have direct dry-runs; simulate with `git status/fetch`." },
+        { title: "5. Apply Patches/Generated Code (Alternative)", command: "git apply <patch-file> or git am <patch-file>", explanation: "For complex changes. `git format-patch` creates patches. `git apply` stages, `git am` applies and commits. Provides auditable trail and conflict resolution." }
+    ];
+
+
+    function populateDefensiveCoding() {
+        const container = document.getElementById('defensiveCodingPractices');
+        if (!container) return;
+        defensivePractices.forEach(practice => {
+            const div = document.createElement('div');
+            div.className = 'bg-stone-50 p-4 rounded-lg border border-stone-200 interactive-card';
+            div.innerHTML = `
+                    <details class="group">
+                        <summary class="text-lg font-medium text-neutral-700 cursor-pointer group-hover:text-teal-600 flex justify-between items-center">
+                            ${practice.name}
+                            <span class="text-teal-500 group-open:rotate-90 transform transition-transform duration-200">&#10148;</span>
+                        </summary>
+                        <p class="mt-2 text-neutral-600 leading-relaxed">${practice.description}</p>
+                    </details>
+                `;
+            container.appendChild(div);
+        });
+    }
+
+    function populateMarkdownParsers() {
+        const container = document.getElementById('markdownParsersComparison');
+        if (!container) return;
+        const gridDiv = document.createElement('div');
+        gridDiv.className = 'grid md:grid-cols-2 gap-6';
+
+        markdownParsers.forEach(parser => {
+            const card = document.createElement('div');
+            card.className = `p-5 rounded-lg shadow-md interactive-card ${parser.suitable ? 'bg-teal-50 border-teal-200 border' : 'bg-rose-50 border-rose-200 border'}`;
+            card.innerHTML = `
+                    <h5 class="text-lg font-semibold ${parser.suitable ? 'text-teal-700' : 'text-rose-700'}">${parser.name} ${parser.suitable ? '(Recommended by report)' : ''}</h5>
+                    <p class="text-sm text-neutral-600 mt-1 mb-2"><strong>Features:</strong> ${parser.features}</p>
+                    <p class="text-sm text-neutral-600 mb-1"><strong>Pros:</strong> ${parser.pros}</p>
+                    <p class="text-sm text-neutral-600"><strong>Cons:</strong> ${parser.cons}</p>
+                `;
+            gridDiv.appendChild(card);
+        });
+        container.appendChild(gridDiv);
+    }
+
+    function populatePromptEngineering() {
+        const container = document.getElementById('promptEngineeringPractices');
+        if (!container) return;
+        promptPractices.forEach(practice => {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 rounded-lg shadow-md interactive-card border border-transparent hover:border-teal-200 cursor-pointer';
+            card.innerHTML = `
+                    <h5 class="font-semibold text-neutral-700">${practice.name}</h5>
+                    <p class="text-sm text-neutral-600 mt-1 hidden">${practice.description} <em class="text-teal-600 block mt-1">${practice.why}</em></p>
+                `;
+            card.addEventListener('click', () => {
+                card.querySelector('p').classList.toggle('hidden');
+                card.classList.toggle('bg-teal-50');
+                card.classList.toggle('border-teal-300');
+            });
+            container.appendChild(card);
+        });
+    }
+
+    function populateGitAutomationSteps() {
+        const container = document.getElementById('gitAutomationSteps');
+        if (!container) return;
+        gitAutomationStepsData.forEach(step => {
+            const div = document.createElement('div');
+            div.className = 'bg-stone-50 p-4 rounded-lg border border-stone-200 interactive-card';
+            div.innerHTML = `
+                    <details class="group">
+                        <summary class="text-lg font-medium text-neutral-700 cursor-pointer group-hover:text-teal-600 flex justify-between items-center">
+                            ${step.title}
+                            <span class="text-teal-500 group-open:rotate-90 transform transition-transform duration-200">&#10148;</span>
+                        </summary>
+                        <div class="mt-2 text-neutral-600 leading-relaxed">
+                            <p class="mb-1"><strong class="text-neutral-700">Command:</strong> <code class="bg-neutral-200 text-neutral-800 px-1 rounded text-sm">${step.command}</code></p>
+                            <p>${step.explanation}</p>
+                        </div>
+                    </details>
+                `;
+            container.appendChild(div);
+        });
+    }
+
+
+    if (tabsContainer) {
+        tabsContainer.addEventListener('click', (event) => {
+            if (event.target.tagName === 'BUTTON') {
+                const tabId = event.target.dataset.tab;
+
+                tabsContainer.querySelectorAll('.tab-button').forEach(button => {
+                    button.classList.remove('active', 'text-teal-600', 'border-teal-600');
+                    button.classList.add('text-neutral-500', 'border-transparent');
+                });
+                event.target.classList.add('active', 'text-teal-600', 'border-teal-600');
+                event.target.classList.remove('text-neutral-500', 'border-transparent');
+
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === tabId) {
+                        section.classList.add('active');
+                    }
+                });
+            }
+        });
+    }
+
+    if (workflowPhasesChartCtx) {
+        new Chart(workflowPhasesChartCtx, {
+            type: 'bar',
+            data: {
+                labels: workflowData.labels,
+                datasets: [{
+                    label: 'Workflow Phase',
+                    data: [10, 12, 14, 16, 15, 13], // Arbitrary values for visual representation
+                    backgroundColor: 'rgba(13, 148, 136, 0.6)', // teal-600 with alpha
+                    borderColor: 'rgba(15, 118, 110, 1)', // teal-700
+                    borderWidth: 1,
+                    hoverBackgroundColor: 'rgba(13, 148, 136, 0.8)',
+                    hoverBorderColor: 'rgba(15, 118, 110, 1)',
+
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { display: false }, // Hide x-axis ticks for cleaner look
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#404040', // neutral-700
+                            font: { size: 10 }
+                        },
+                        grid: { color: '#e5e7eb' } // gray-200
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.75)',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 10,
+                        cornerRadius: 4,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = [];
+                                label.push(`Description: ${workflowData.descriptions[context.dataIndex]}`);
+                                label.push(`LLM Role: ${workflowData.llmRoles[context.dataIndex]}`);
+                                return label;
+                            },
+                            afterLabel: function(context) {
+                                return "Click bar to learn more (simulated).";
+                            }
+                        }
+                    }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const sectionId = workflowData.reportSections[index];
+                        // This is a placeholder for actual jump/highlight logic
+                        // For now, just alerts and focuses the title
+                        alert(`Clicked on: ${workflowData.labels[index]}. More details would appear here or link to section: ${sectionId}.`);
+                        const titleElement = document.getElementById('workflowPhasesTitle');
+                        if(titleElement) {
+                            titleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            titleElement.focus({ preventScroll: true }); // For accessibility
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Populate dynamic content on load
+    document.addEventListener('DOMContentLoaded', () => {
+        populateDefensiveCoding();
+        populateMarkdownParsers();
+        populatePromptEngineering();
+        populateGitAutomationSteps();
+    });
+
+</script>
+</body>
+</html>
